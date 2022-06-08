@@ -1,0 +1,28 @@
+{
+  "name": "apt-key-add",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "prepare": "ncc build index.js -o dist --source-map --license licenses.txt",
+    "test": "jest",
+    "all": "npm run lint && npm run prepare && npm run test"
+  },
+  "keywords": [],
+  "author": "Stefan Arentz <stefan@arentz.ca>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/st3fan/actions.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.8.2",
+    "@actions/exec": "^1.1.1",
+    "@actions/http-client": "^2.0.1"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.34.0",
+    "eslint": "^8.17.0"
+  }
+}
