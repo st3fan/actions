@@ -8932,18 +8932,15 @@ module.exports = require("zlib");
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-// TODO License Header
-
-
 const core = __nccwpck_require__(2186);
 const http = __nccwpck_require__(6255)
 const exec = __nccwpck_require__(1514);
 
 const openpgp = __nccwpck_require__(7946);
 
-const fs = __nccwpck_require__(7147); 
-const os = __nccwpck_require__(2037); 
-const path = __nccwpck_require__(1017); 
+const fs = __nccwpck_require__(7147);
+const os = __nccwpck_require__(2037);
+const path = __nccwpck_require__(1017);
 
 
 const APT_TRUSTED_GPG_DIR = '/etc/apt/trusted.gpg.d';

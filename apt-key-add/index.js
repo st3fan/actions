@@ -1,15 +1,12 @@
-// TODO License Header
-
-
 const core = require('@actions/core');
 const http = require('@actions/http-client')
 const exec = require('@actions/exec');
 
 const openpgp = require('openpgp');
 
-const fs = require('fs'); 
-const os = require('os'); 
-const path = require('path'); 
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 
 const APT_TRUSTED_GPG_DIR = '/etc/apt/trusted.gpg.d';
