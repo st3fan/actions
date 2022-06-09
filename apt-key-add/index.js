@@ -16,12 +16,21 @@ const APT_TRUSTED_GPG_DIR = '/etc/apt/trusted.gpg.d';
 const USER_AGENT = 'Apt-Key-Add (https://github.com/st3fan/actions/apt-key-add)';
 
 
+/**
+ * Turn a fingerprint in any kind of notation (12 34 / 12:34 / aa / AA) into a
+ * simple hex string.
+ */
+
 const normalizeFingerprint = (fingerprint) => {
   return fingerprint.trim().replaceAll(' ', '').replaceAll(':', '').toLowerCase();
 };
 
+/**
+ * Check if a normalized fingerprint is what we expect it to be. Returns true
+ * if it is.
+ */
 
-const validateFingerprint = (fingerprint) => {
+const validateNormalizedFingerprint = (fingerprint) => {
   const re = /^[a-f0-9]{40}$/;
   return re.test(fingerprint);
 };
@@ -50,13 +59,17 @@ const parseConfiguration = () => {
     keyFingerprint: normalizeFingerprint(core.getInput('key-fingerprint', {required: true})),
   };
 
-  if (!validateFingerprint(configuration.keyFingerprint)) {
+  if (!validateNormalizedFingerprint(configuration.keyFingerprint)) {
     throw Error('Invalid fingerprint input: must be 20 bytes hex.');
   }
 
   return configuration
 };
 
+
+/**
+ * Fetch the key from the given URL.
+ */
 
 const fetchKey = async (url) => {
   const client = new http.HttpClient();
@@ -81,7 +94,9 @@ const checkKey = async (armoredPublicKey, expectedFingerprint) => {
 
 
 /**
- * Write the key to /etc/apt/trusted.gpg.d
+ * Write the key to /etc/apt/trusted.gpg.d using the key id as the filename. We
+ * can't write as root so we write it to a temporary directory first and then
+ * sudo mv it to the right place.
  */
 
 const writeKey = async (armoredPublicKey, publicKey) => {
