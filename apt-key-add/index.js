@@ -7,7 +7,6 @@ const exec = require('@actions/exec');
 
 const openpgp = require('openpgp');
 
-const crypto = require('crypto');
 const fs = require('fs'); 
 const os = require('os'); 
 const path = require('path'); 
@@ -87,7 +86,7 @@ const checkKey = async (armoredPublicKey, expectedFingerprint) => {
 
 const writeKey = async (armoredPublicKey, publicKey) => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'apt-key-add-action-'));
-  const keyName = `{publicKey.getId()}.asc`;
+  const keyName = `${publicKey.getId()}.asc`;
   const keyPath = path.join(tmp, keyName);
   fs.writeFileSync(keyPath, armoredPublicKey);
   await exec.exec('sudo', ['mv', keyPath, path.join(APT_TRUSTED_GPG_DIR, keyName)]);

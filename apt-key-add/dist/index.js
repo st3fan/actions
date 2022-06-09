@@ -8941,7 +8941,6 @@ const exec = __nccwpck_require__(1514);
 
 const openpgp = __nccwpck_require__(7946);
 
-const crypto = __nccwpck_require__(6113);
 const fs = __nccwpck_require__(7147); 
 const os = __nccwpck_require__(2037); 
 const path = __nccwpck_require__(1017); 
@@ -9021,7 +9020,7 @@ const checkKey = async (armoredPublicKey, expectedFingerprint) => {
 
 const writeKey = async (armoredPublicKey, publicKey) => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'apt-key-add-action-'));
-  const keyName = `{publicKey.getId()}.asc`;
+  const keyName = `${publicKey.getId()}.asc`;
   const keyPath = path.join(tmp, keyName);
   fs.writeFileSync(keyPath, armoredPublicKey);
   await exec.exec('sudo', ['mv', keyPath, path.join(APT_TRUSTED_GPG_DIR, keyName)]);
