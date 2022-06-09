@@ -2,6 +2,8 @@ const core = require('@actions/core');
 const http = require('@actions/http-client')
 const exec = require('@actions/exec');
 
+const openpgp = require('openpgp');
+
 const crypto = require('crypto');
 const fs = require('fs'); 
 
@@ -9,7 +11,7 @@ const fs = require('fs');
 const USER_AGENT = 'Apt-Key-Add (https://github.com/st3fan/actions/apt-key-add)';
 
 
-// TODO This is not great. What is the node approved way?
+// TODO This is not great. What is the node approved way? Or just use stdin?
 const makeTemporaryPath = () => {
   return '/tmp/' + crypto.randomBytes(4).readUInt32LE(0)
     + '_' + crypto.randomBytes(4).readUInt32LE(0)
@@ -17,15 +19,25 @@ const makeTemporaryPath = () => {
 };
 
 
+const normalizeFingerprint = (fingerprint) => {
+  return fingerprint.trim().replaceAll(' ', '').replaceAll(':', '').toLowerCase();
+};
+
+
+const validateFingerprint = (fingerprint) => {
+  const re = /^[a-f0-9]{40}$/;
+  return re.test(fingerprint);
+};
+
+
 const parseConfiguration = () => {
   const configuration = {
-    keyUrl: core.getInput('key-url'),
-    keyData: core.getInput('key-data'),
-    expectedKeyFingerprint: core.getInput('expected-key-fingerprint'),
+    keyUrl: core.getInput('key-url', {required: true}),
+    keyFingerprint: normalizeFingerprint(core.getInput('key-fingerprint', {required: true})),
   };
 
-  if (configuration.keyUrl === '' && configuration.keyData === '') {
-    throw Error(`Either key-url or key-data must be set.`);
+  if (!validateFingerprint(configuration.keyFingerprint)) {
+    throw Error('Invalid fingerprint input: must be 20 bytes hex.');
   }
 
   return configuration
@@ -41,69 +53,20 @@ const fetchKey = async (url) => {
 
 
 /**
- * Parse the output of `gpg --show-keys --with-fingerprint` and
- * look for key fingerprints.
- *
- * This is not a perfect parser and it would also for example match
- * a fingerprint stored on the uid line.
- *
- * We accept that for now and let checkKeyFingerprint fail if the
- * output contains more than one fingerprint for whatever reason.
+ * Check if the given (armored) public key matches the fingerprint.
  */
 
-const parseShowKeysWithFingerprint = (output) => {
-  const re = /Key fingerprint = ([A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4}  [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4})/g;
-  return [...output.matchAll(re)].map((m) => { return m[1] });
+const checkKey = async (armoredPublicKey, expectedFingerprint) => {
+  const key = await openpgp.readKey({ armoredKey: armoredPublicKey});
+  console.log("FINGERPRINT", key.getFingerprint());
+  return key.getFingerprint() === expectedFingerprint
 };
 
 
-/**
- * Remove all spaces from a fingerprint.
- */
-
-const normalizeFingerprint = (fingerprint) => {
-  return fingerprint.replaceAll(' ', '');
-};
-
-
-/**
- * Check if the given (armored) key contains the fingerprint. An
- * exception is raised when there are unexpected results or when
- * the expected fingerprint cannot be found.
- */
-
-const checkKeyFingerprint = async (armoredKeyPath, expectedFingerprint) => {
-  let output = '';
-  const options = {
-    silent: false,
-    listeners: {
-      stdout: (data) => { output += data.toString() }
-    }
-  };
-  await exec.exec('gpg', ['--show-keys', '--with-fingerprint', armoredKeyPath], options);
-  const fingerprints = parseShowKeysWithFingerprint(output);
-  if (fingerprints.length !== 1) {
-    throw new Error('Fingerprint check error; not exactly 1 fingerprint found');
-  }
-  if (normalizeFingerprint(fingerprints[0]) !== normalizeFingerprint(expectedFingerprint)) {
-    throw new Error('Fingerprint check error; did not find expected fingerprint');
-  }
-};
-
-
-const addKey = async ({ keyUrl, keyData, expectedKeyFingerprint }) => {
-  if (keyUrl !== '') {
-    keyData = await fetchKey(keyUrl);
-  }
-
+const addKey = async (armoredPublicKey) => {
   const path = makeTemporaryPath();
-  fs.writeFileSync(path, keyData);
-
-  if (expectedKeyFingerprint !== '') {
-    checkKeyFingerprint(path, expectedKeyFingerprint);
-  }
-
-  //console.log('DEBUG', 'sudo', ['apt-key', 'add', path]);
+  fs.writeFileSync(path, armoredPublicKey);
+  //console.log('GOOD', 'sudo', ['apt-key', 'add', path]);
   await exec.exec('sudo', ['apt-key', 'add', path]);
 }
 
@@ -111,12 +74,13 @@ const addKey = async ({ keyUrl, keyData, expectedKeyFingerprint }) => {
 const main = async () => {
   try {
     const configuration = parseConfiguration();
-    await addKey(configuration);
+    const armoredPublicKey = await fetchKey(configuration.keyUrl);
+    await checkKey(armoredPublicKey, configuration.keyFingerprint);
+    await addKey(armoredPublicKey);
   } catch (error) {
-    console.log("CATCHING", error); // TODO This doesn't work - is it the async stuff?
     core.setFailed(error.message);
   }
 }
 
-main();
 
+main();
