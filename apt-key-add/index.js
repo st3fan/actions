@@ -103,8 +103,8 @@ const addKey = async ({ keyUrl, keyData, expectedKeyFingerprint }) => {
     checkKeyFingerprint(path, expectedKeyFingerprint);
   }
 
-  console.log('DEBUG', 'sudo', ['apt-key', 'add', path]);
-  //await exec.exec('sudo', ['apt-key', 'add', path]);
+  //console.log('DEBUG', 'sudo', ['apt-key', 'add', path]);
+  await exec.exec('sudo', ['apt-key', 'add', path]);
 }
 
 
