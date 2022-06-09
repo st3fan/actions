@@ -75,6 +75,9 @@ const fetchKey = async (url) => {
   const client = new http.HttpClient();
   client.requestOptions = {headers: {'User-Agent': USER_AGENT}};
   const res = await client.get(url);
+  if (res.message.statusCode != 200) {
+    throw Error(`Failed to fetch key: HTTP ${res.message.statusCode}`);
+  }
   return await res.readBody();
 };
 
