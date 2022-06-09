@@ -1,14 +1,10 @@
 name: 'apt-key-add'
 description: 'Add a new key to the list of trusted keys.'
 inputs:
-  key-data:
-    description: 'Key data.'
   key-url:
     description: 'Key URL.'
-  expected-key-fingerprint:
+  key-fingerprint:
     description: 'Expected key fingerprint.'
-  expected-key-digest:
-    description: 'Expected key sha256 digest.'
 runs:
   using: 'node16'
   main: 'dist/index.js'
