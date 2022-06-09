@@ -8932,6 +8932,9 @@ module.exports = require("zlib");
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
+// TODO License Header
+
+
 const core = __nccwpck_require__(2186);
 const http = __nccwpck_require__(6255)
 const exec = __nccwpck_require__(1514);
@@ -8940,6 +8943,8 @@ const openpgp = __nccwpck_require__(7946);
 
 const crypto = __nccwpck_require__(6113);
 const fs = __nccwpck_require__(7147); 
+const os = __nccwpck_require__(2037); 
+const path = __nccwpck_require__(1017); 
 
 
 const APT_TRUSTED_GPG_DIR = '/etc/apt/trusted.gpg.d';
@@ -9002,30 +9007,24 @@ const fetchKey = async (url) => {
  */
 
 const checkKey = async (armoredPublicKey, expectedFingerprint) => {
-  const key = await openpgp.readKey({ armoredKey: armoredPublicKey});
-  if (key.getFingerprint() !== expectedFingerprint) {
+  const publicKey = await openpgp.readKey({ armoredKey: armoredPublicKey});
+  if (publicKey.getFingerprint() !== expectedFingerprint) {
     throw Error(`Key validation failed: unexpected fingerprint.`);
   }
+  return publicKey;
 };
 
 
 /**
- * Add the key. Using apt-key is deprecated but it works on all
- * the Ubuntu versions that are available to GitHub Workflows.
+ * Write the key to /etc/apt/trusted.gpg.d
  */
 
-//const addKey = async (armoredPublicKey) => {
-//  // TODO Use stdin instead of a temporary file.
-//  const path = makeTemporaryPath();
-//  fs.writeFileSync(path, armoredPublicKey);
-//  await exec.exec('sudo', ['apt-key', 'add', path]);
-//}
-
-
-const writeKey = async (armoredPublicKey) => {
-  const path = '/tmp/ekljdklejdlkjeklde.asc';
-  fs.writeFileSync(path, armoredPublicKey);
-  await exec.exec('sudo', ['mv', path, '/etc/apt/trusted.gpg.d/postgres.asc']);
+const writeKey = async (armoredPublicKey, publicKey) => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'apt-key-add-action-'));
+  const keyName = `{publicKey.getId()}.asc`;
+  const keyPath = path.join(tmp, keyName);
+  fs.writeFileSync(keyPath, armoredPublicKey);
+  await exec.exec('sudo', ['mv', keyPath, path.join(APT_TRUSTED_GPG_DIR, keyName)]);
 }
 
 
@@ -9034,9 +9033,8 @@ const main = async () => {
     checkWorkerRequirements();
     const configuration = parseConfiguration();
     const armoredPublicKey = await fetchKey(configuration.keyUrl);
-    await checkKey(armoredPublicKey, configuration.keyFingerprint);
-    //await addKey(armoredPublicKey);
-    await writeKey(armoredPublicKey, configuration.keyFingerprint);
+    const publicKey = await checkKey(armoredPublicKey, configuration.keyFingerprint);
+    await writeKey(armoredPublicKey, publicKey);
   } catch (error) {
     core.setFailed(error.message);
   }
