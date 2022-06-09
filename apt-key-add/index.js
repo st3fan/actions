@@ -58,7 +58,6 @@ const fetchKey = async (url) => {
 
 const checkKey = async (armoredPublicKey, expectedFingerprint) => {
   const key = await openpgp.readKey({ armoredKey: armoredPublicKey});
-  console.log("FINGERPRINT", key.getFingerprint());
   return key.getFingerprint() === expectedFingerprint
 };
 
@@ -66,7 +65,6 @@ const checkKey = async (armoredPublicKey, expectedFingerprint) => {
 const addKey = async (armoredPublicKey) => {
   const path = makeTemporaryPath();
   fs.writeFileSync(path, armoredPublicKey);
-  //console.log('GOOD', 'sudo', ['apt-key', 'add', path]);
   await exec.exec('sudo', ['apt-key', 'add', path]);
 }
 
