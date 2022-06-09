@@ -8956,6 +8956,7 @@ const normalizeFingerprint = (fingerprint) => {
   return fingerprint.trim().replaceAll(' ', '').replaceAll(':', '').toLowerCase();
 };
 
+
 /**
  * Check if a normalized fingerprint is what we expect it to be. Returns true
  * if it is.
@@ -9042,6 +9043,10 @@ const writeKey = async (armoredPublicKey, publicKey) => {
 }
 
 
+/**
+ * Main entry point.
+ */
+
 const main = async () => {
   try {
     checkWorkerRequirements();
@@ -9053,7 +9058,6 @@ const main = async () => {
     core.setFailed(error.message);
   }
 }
-
 
 main();
 
