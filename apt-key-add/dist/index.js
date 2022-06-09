@@ -9014,16 +9014,16 @@ const checkKey = async (armoredPublicKey, expectedFingerprint) => {
  * the Ubuntu versions that are available to GitHub Workflows.
  */
 
-const addKey = async (armoredPublicKey) => {
-  // TODO Use stdin instead of a temporary file.
-  const path = makeTemporaryPath();
-  fs.writeFileSync(path, armoredPublicKey);
-  await exec.exec('sudo', ['apt-key', 'add', path]);
-}
+//const addKey = async (armoredPublicKey) => {
+//  // TODO Use stdin instead of a temporary file.
+//  const path = makeTemporaryPath();
+//  fs.writeFileSync(path, armoredPublicKey);
+//  await exec.exec('sudo', ['apt-key', 'add', path]);
+//}
 
 
 const writeKey = async (armoredPublicKey) => {
-  const path = makeTemporaryPath();
+  const path = '/tmp/ekljdklejdlkjeklde.asc';
   fs.writeFileSync(path, armoredPublicKey);
   await exec.exec('sudo', ['mv', path, '/etc/apt/trusted.gpg.d/postgres.asc']);
 }
