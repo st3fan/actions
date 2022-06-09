@@ -3444,7 +3444,7 @@ const normalizeFingerprint = (fingerprint) => {
 const checkKeyFingerprint = async (armoredKeyPath, expectedFingerprint) => {
   let output = '';
   const options = {
-    silent: true,
+    silent: false,
     listeners: {
       stdout: (data) => { output += data.toString() }
     }
